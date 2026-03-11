@@ -1,0 +1,17 @@
+{
+  "cxxNamespace": ["visage"],
+  "ios": {
+    "iosModuleName": "Visage"
+  },
+  "android": {
+    "androidNamespace": ["visage"],
+    "androidCxxLibName": "visage"
+  },
+  "autolinking": {
+    "Visage": {
+      "swift": "Visage",
+      "kotlin": "Visage"
+    }
+  },
+  "ignorePaths": ["node_modules"]
+}
