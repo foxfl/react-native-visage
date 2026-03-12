@@ -13,7 +13,11 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "visage.example"
+      "bundleIdentifier": "visage.example",
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "Visage needs access to your photo library to scan for faces."
+      },
+      "appleTeamId": "95G6T77DP2"
     },
     "android": {
       "adaptiveIcon": {

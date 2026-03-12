@@ -9,6 +9,10 @@
 .vscode/
 jsconfig.json
 
+# Python
+venv/
+
+
 # Xcode
 #
 build/
@@ -84,3 +88,10 @@ android/generated
 
 # React Native Nitro Modules
 nitrogen/
+
+# Face model source files — large binaries, regenerate with encoder.py
+mobilefacenet.pt
+*.onnx
+*.zip
+MobileFaceNet.mlpackage/
+ArcFace.mlpackage/

@@ -10,7 +10,7 @@ Pod::Spec.new do |s|
   s.license      = package["license"]
   s.authors      = package["author"]
 
-  s.platforms    = { :ios => min_ios_version_supported }
+  s.platforms    = { :ios => '18.0' }
   s.source       = { :git => "https://github.com/foxfl/react-native-visage.git", :tag => "#{s.version}" }
 
   s.source_files = [
@@ -18,6 +18,9 @@ Pod::Spec.new do |s|
     "ios/**/*.{m,mm}",
     "cpp/**/*.{hpp,cpp}",
   ]
+
+  s.resources = ['ios/**/*.mlmodelc']
+  s.frameworks = 'Vision', 'CoreML', 'Photos', 'Accelerate'
 
   s.dependency 'React-jsi'
   s.dependency 'React-callinvoker'
