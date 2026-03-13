@@ -86,8 +86,8 @@ lib/
 ios/generated
 android/generated
 
-# React Native Nitro Modules
-nitrogen/
+# React Native Nitro Modules — generated sources are committed so consumers can build without running nitrogen
+# nitrogen/
 
 # Face model source files — large binaries, regenerate with encoder.py
 mobilefacenet.pt
