@@ -101,7 +101,12 @@ class Visage: HybridVisageSpec {
                     imageOptions.isSynchronous = true
                     imageOptions.deliveryMode = .highQualityFormat
                     imageOptions.resizeMode = .exact
-                    imageOptions.isNetworkAccessAllowed = true
+                    // Do not allow network access — photos requiring iCloud download cause a
+                    // PHImageManager result-accumulator timeout (3s) followed by a crash when
+                    // the delayed delivery callback fires into a torn-down synchronous request.
+                    // iCloud-only photos are skipped (image == nil → guard fails → continue)
+                    // and will be picked up on the next scan once they are downloaded locally.
+                    imageOptions.isNetworkAccessAllowed = false
 
                     for i in 0..<assets.count {
                         if self.isCancelled {
