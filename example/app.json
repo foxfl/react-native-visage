@@ -13,6 +13,7 @@
     },
     "ios": {
       "supportsTablet": true,
+      "deploymentTarget": "18.0",
       "bundleIdentifier": "visage.example",
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "Visage needs access to your photo library to scan for faces."
