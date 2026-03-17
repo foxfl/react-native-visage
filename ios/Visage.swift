@@ -52,8 +52,10 @@ class Visage: HybridVisageSpec {
         return Promise.async { [self] in
             self.isCancelled = false
 
+            NSLog("[Visage] scanLibrary: requesting photo access")
             // Request photo library authorization
             let status = await self.requestPhotoAccess()
+            NSLog("[Visage] scanLibrary: photo access status = %d", status.rawValue)
             guard status == .authorized || status == .limited else {
                 options.onError("Photo library access denied")
                 return
@@ -65,6 +67,7 @@ class Visage: HybridVisageSpec {
 
             if let since = options.since {
                 let sinceDate = Date(timeIntervalSince1970: since)
+                NSLog("[Visage] scanLibrary: filtering since %@", sinceDate as NSDate)
                 fetchOptions.predicate = NSPredicate(format: "creationDate > %@", sinceDate as NSDate)
             }
 
@@ -74,13 +77,16 @@ class Visage: HybridVisageSpec {
                    withLocalIdentifiers: [albumId], options: nil
                ).firstObject {
                 assets = PHAsset.fetchAssets(in: collection, options: fetchOptions)
+                NSLog("[Visage] scanLibrary: scanning album %@ — %d assets", albumId, assets.count)
             } else {
                 assets = PHAsset.fetchAssets(with: .image, options: fetchOptions)
+                NSLog("[Visage] scanLibrary: scanning full library — %d assets", assets.count)
             }
             let total = Double(assets.count)
             options.onProgress(0, total)
 
             if assets.count == 0 {
+                NSLog("[Visage] scanLibrary: 0 assets, completing immediately")
                 options.onComplete()
                 return
             }
@@ -92,6 +98,7 @@ class Visage: HybridVisageSpec {
                 let ptr = UnsafeMutableRawPointer(buffer.data).bindMemory(to: Float.self, capacity: Int(count))
                 return Array(UnsafeBufferPointer(start: ptr, count: Int(count)))
             }
+            NSLog("[Visage] scanLibrary: %d embeddings loaded, starting processing loop", referenceEmbeddings.count)
 
             // Process assets on background queue
             await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
@@ -110,6 +117,7 @@ class Visage: HybridVisageSpec {
 
                     for i in 0..<assets.count {
                         if self.isCancelled {
+                            NSLog("[Visage] scanLibrary: cancelled at asset %d", i)
                             continuation.resume()
                             return
                         }
@@ -122,18 +130,28 @@ class Visage: HybridVisageSpec {
                             // Cap at 1024 to keep memory and CPU reasonable.
                             let longerSide = min(max(asset.pixelWidth, asset.pixelHeight), 1024)
                             let targetSize = CGSize(width: longerSide, height: longerSide)
+                            NSLog("[Visage] asset[%d] %@ — requesting image %dx%d", i, asset.localIdentifier, longerSide, longerSide)
 
                             imageManager.requestImage(
                                 for: asset,
                                 targetSize: targetSize,
                                 contentMode: .aspectFit,
                                 options: imageOptions
-                            ) { image, _ in
+                            ) { image, info in
+                                if image == nil {
+                                    NSLog("[Visage] asset[%d] — image nil (degraded=%@, cancelled=%@, error=%@)",
+                                          i,
+                                          (info?[PHImageResultIsDegradedKey] as? Bool ?? false) ? "YES" : "NO",
+                                          (info?[PHImageCancelledKey] as? Bool ?? false) ? "YES" : "NO",
+                                          String(describing: info?[PHImageErrorKey]))
+                                }
                                 guard let uiImage = image,
                                       let cgImage = try? self.normalizeOrientation(uiImage) else { return }
+                                NSLog("[Visage] asset[%d] — image loaded %dx%d, running face detection", i, cgImage.width, cgImage.height)
 
                                 do {
                                     let detections = try self.detectAndEmbed(in: cgImage)
+                                    NSLog("[Visage] asset[%d] — %d face(s) detected", i, detections.count)
                                     var matchResults: [MatchResult] = []
 
                                     for detection in detections {
